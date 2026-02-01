@@ -3,6 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import auctionRoutes from './routes/auctionRoutes.js';
 
 dotenv.config();
 
@@ -21,6 +22,17 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
+// Auction Routes
+app.use('/items', auctionRoutes);
+
+// Basic Health Check Route
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        message: 'Server is running', 
+        timestamp: new Date() 
+    });
+});
 
 // Start Server
 const PORT = process.env.PORT || 5000;
