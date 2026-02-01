@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # The API & Socket Server
+  server:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+    networks:
+      - auction-network
+
+  # The React Client
+  client:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+    stdin_open: true
+    depends_on:
+      - server
+    networks:
+      - auction-network
+
+networks:
+  auction-network:
+    driver: bridge
