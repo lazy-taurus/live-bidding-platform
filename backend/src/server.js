@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import auctionRoutes from './routes/auctionRoutes.js';
+import { placeBid } from './services/auctionServices.js';
 
 dotenv.config();
 
@@ -16,6 +17,29 @@ const io = new Server(server, {
         origin: "*",
         methods: ["GET", "POST"]
     }
+});
+
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
+    // EVENT: User places a bid
+    socket.on('BID_PLACED', (payload) => {
+        const { itemId, amount } = payload;
+
+        const result = placeBid(itemId, amount, socket.id);
+
+        if (result.success) {
+            // SUCCESS: New price to EVERYONE
+            io.emit('UPDATE_BID', result.item);
+        } else {
+            // FAILURE: Send error to failed person
+            socket.emit('BID_ERROR', { message: result.error });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
 });
 
 // Middleware
