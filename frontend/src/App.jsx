@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
-import Dashboard from './components/Dashboard';
+import Dashboard from './pages/Dashboard';
+import AdminPanel from './pages/AdminPanel'; // ✅ Import Admin Panel
 
 function App() {
   const [user, setUser] = useState(null);
@@ -23,11 +25,26 @@ function App() {
     setUser(null);
   };
 
-  if (!user) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
-  }
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route 
+          path="/login" 
+          element={!user ? <Login onLoginSuccess={handleLoginSuccess} /> : <Navigate to="/" />} 
+        />
 
-  return <Dashboard user={user} onLogout={handleLogout} />;
+        <Route 
+          path="/admin" 
+          element={<AdminPanel />} 
+        />
+
+        <Route 
+          path="/" 
+          element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;

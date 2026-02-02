@@ -39,3 +39,36 @@ export const placeBid = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// 4. Create New Item
+export const createItem = async (req, res) => {
+    try {
+        const { title, description, startingPrice, endTime, imageUrl } = req.body;
+        
+        const newItem = new AuctionItem({
+            title,
+            description,
+            currentPrice: startingPrice,
+            startingPrice,
+            endTime,
+            imageUrl,
+            highestBidder: null,
+            bidHistory: []
+        });
+
+        await newItem.save();
+        res.status(201).json(newItem);
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating item' });
+    }
+};
+
+// 5. Delete Item
+export const deleteItem = async (req, res) => {
+    try {
+        await AuctionItem.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Item deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting item' });
+    }
+};

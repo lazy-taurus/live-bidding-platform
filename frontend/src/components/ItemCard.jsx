@@ -14,9 +14,19 @@ export default function ItemCard({ item, onBid, userId, notification }) {
     const formatDollar = (cents) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
     const formatTime = (ms) => {
         if (ms <= 0) return "Ended";
-        const m = Math.floor(ms / 60000);
-        const s = Math.floor((ms % 60000) / 1000);
-        return `${m}m ${s}s`;
+        
+        const totalSeconds = Math.floor(ms / 1000);
+        const days = Math.floor(totalSeconds / (3600 * 24));
+        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = Math.floor(totalSeconds % 60);
+
+        let timeString = "";
+        if (days > 0) timeString += `${days}d `;
+        if (hours > 0 || days > 0) timeString += `${hours}h `;
+        timeString += `${minutes}m ${seconds}s`;
+        
+        return timeString;
     };
 
     // Effects

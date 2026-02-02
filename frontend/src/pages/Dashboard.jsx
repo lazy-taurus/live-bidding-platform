@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { getItems } from '../services/api';
-import ItemCard from './ItemCard';
+import ItemCard from '../components/ItemCard';
 
 const socket = io('http://localhost:5000', {
     auth: { token: localStorage.getItem('token') },
