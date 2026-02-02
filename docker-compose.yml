@@ -1,28 +1,59 @@
-version: '3.8'
-
 services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: live-bidding-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: live-bidding
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - auction-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # The API & Socket Server
   server:
     build: ./backend
+    container_name: live-bidding-server
     ports:
       - "5000:5000"
     environment:
-      - PORT=5000
+      - PORT=${PORT:-5000}
+      - NODE_ENV=${NODE_ENV:-development}
+      - MONGO_URI=${MONGO_URI:-mongodb://mongodb:27017/live-bidding}
+      - JWT_SECRET=${JWT_SECRET:-change_me_in_production}
+      - CLIENT_URL=${CLIENT_URL:-http://localhost:3000}
+    depends_on:
+      mongodb:
+        condition: service_healthy
     networks:
       - auction-network
+    restart: unless-stopped
 
   # The React Client
   client:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
+    container_name: live-bidding-client
     ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend/src:/app/src
-    stdin_open: true
+      - "3000:80"
     depends_on:
       - server
     networks:
       - auction-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+    driver: local
 
 networks:
   auction-network:
