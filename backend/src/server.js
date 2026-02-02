@@ -3,13 +3,14 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
 import auctionRoutes from './routes/auctionRoutes.js';
 import { placeBid } from './services/auctionServices.js';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import mongoSanitize from 'express-mongo-sanitize';
 
 // Connect to Database
 connectDB();
@@ -28,26 +29,44 @@ const io = new Server(server, {
     }
 });
 
+// 🔒 SOCKET AUTHENTICATION
+io.use((socket, next) => {
+    // Client will send token in: socket.handshake.auth.token
+    const token = socket.handshake.auth.token;
+
+    if (!token) {
+        return next(new Error("Authentication error: No token provided"));
+    }
+
+    try {
+        // Verify user
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.user = decoded; 
+        
+        next();
+    } catch (err) {
+        next(new Error("Authentication error: Invalid token"));
+    }
+});
+
 io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+    console.log('User connected:', socket.user.id);
     
     // EVENT: User places a bid
-    socket.on('BID_PLACED', (payload) => {
+    socket.on('BID_PLACED', async (payload) => {
         const { itemId, amount } = payload;
         
-        const result = placeBid(itemId, amount, socket.id);
-        
+        const result = await placeBid(itemId, amount, socket.user.id);
+
         if (result.success) {
-            // SUCCESS: New price to EVERYONE
             io.emit('UPDATE_BID', result.item);
         } else {
-            // FAILURE: Send error to failed person
             socket.emit('BID_ERROR', { message: result.error });
         }
     });
     
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
+        console.log('User disconnected:', socket.user.id);
     });
 });
 
