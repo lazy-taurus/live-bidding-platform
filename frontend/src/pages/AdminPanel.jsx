@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function AdminPanel() {
     const [items, setItems] = useState([]);
     const [formData, setFormData] = useState({
@@ -15,7 +17,7 @@ export default function AdminPanel() {
 
     // Fetch items
     const fetchItems = async () => {
-        const res = await axios.get('http://localhost:5000/items');
+        const res = await axios.get(`${API_URL}/items`);
         setItems(res.data);
     };
 
@@ -25,7 +27,7 @@ export default function AdminPanel() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/items', {
+            await axios.post(`${API_URL}/items`, {
                 ...formData,
                 startingPrice: parseFloat(formData.startingPrice) * 100 
             }, {
@@ -42,7 +44,7 @@ export default function AdminPanel() {
     const handleDelete = async (id) => {
         if(!confirm('Delete this item?')) return;
         try {
-            await axios.delete(`http://localhost:5000/items/${id}`, {
+            await axios.delete(`${API_URL}/items/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchItems();

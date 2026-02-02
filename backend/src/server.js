@@ -24,7 +24,10 @@ const app = express();
 const server = http.createServer(app);
 
 // 4. MIDDLEWARE
-app.use(cors());           
+app.use(cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true
+}));
 app.use(helmet());         
 app.use(express.json());   
 // app.use(mongoSanitize());  
@@ -62,7 +65,6 @@ io.use((socket, next) => {
 io.on('connection', (socket) => {
     // FIX: Handle both "id" (standard) and "_id" (mongo) to be safe
     const userId = socket.user.id || socket.user._id;
-    // console.log('User connected to Socket:', userId);
     
     // FIX: Join a private room so we can message this specific user later
     socket.join(userId);
@@ -79,8 +81,6 @@ io.on('connection', (socket) => {
 
             // 2. Notify the VICTIM
             if (result.previousBidderId && result.previousBidderId !== userId) {
-                //console.log(`Sending OUTBID alert to: ${result.previousBidderId}`);
-                
                 io.to(result.previousBidderId).emit('AUCTION_OUTBID', { 
                     itemId: result.item._id,
                     newItem: result.item
@@ -93,7 +93,7 @@ io.on('connection', (socket) => {
     });
     
     socket.on('disconnect', () => {
-        console.log('User disconnected');
+        // User disconnected, cleanup handled by socket.io
     });
 });
 

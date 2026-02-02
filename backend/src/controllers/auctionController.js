@@ -6,7 +6,7 @@ export const getItems = async (req, res) => {
   try {
     const items = await AuctionItem.find().populate('highestBidder', 'username');
     
-    // Sort: active items first (by endTime ascending), then ended items
+    // Sort: active items first
     const now = new Date();
     items.sort((a, b) => {
       const aIsEnded = a.isClosed || a.endTime < now;

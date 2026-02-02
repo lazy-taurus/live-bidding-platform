@@ -3,7 +3,9 @@ import { io } from 'socket.io-client';
 import { getItems } from '../services/api';
 import ItemCard from '../components/ItemCard';
 
-const socket = io('http://localhost:5000', {
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const socket = io(API_URL, {
     auth: { token: localStorage.getItem('token') },
     autoConnect: false
 });
@@ -15,7 +17,7 @@ export default function Dashboard({ user, onLogout }) {
     const [flashMessages, setFlashMessages] = useState({});
 
     useEffect(() => {
-        getItems().then(data => { setItems(data); setLoading(false); }).catch(console.error);
+        getItems().then(data => { setItems(data); setLoading(false); }).catch(error => console.error('Failed to fetch items:', error));
         
         socket.auth.token = localStorage.getItem('token');
         socket.connect();
