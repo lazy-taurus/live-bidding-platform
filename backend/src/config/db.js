@@ -1,12 +1,19 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv'; 
+
+// Force load .env just in case server.js didn't do it
+dotenv.config(); 
 
 const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/auction_platform');
+        if (!process.env.MONGO_URI) {
+            throw new Error("MONGO_URI is missing from .env file!");
+        }
+        const conn = await mongoose.connect(process.env.MONGO_URI);
         
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
-        console.error(`❌ Error: ${error.message}`);
+        console.error(`❌ DB Connection Error: ${error.message}`);
         process.exit(1);
     }
 };
