@@ -6,15 +6,13 @@ import dotenv from 'dotenv';
 import auctionRoutes from './routes/auctionRoutes.js';
 import { placeBid } from './services/auctionServices.js';
 import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
 
 // Connect to Database
 connectDB();
-
-app.use(helmet());
-app.use(mongoSanitize());
 
 // Load environment variables
 dotenv.config();
@@ -56,6 +54,8 @@ io.on('connection', (socket) => {
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(helmet());
+app.use(mongoSanitize());
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -65,8 +65,9 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// Auction Routes
+// Routes
 app.use('/items', auctionRoutes);
+app.use('/api/auth', authRoutes);
 
 // Basic Health Check Route
 app.get('/health', (req, res) => {
