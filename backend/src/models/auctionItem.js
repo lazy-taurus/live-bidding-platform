@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const auctionItemSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String },
-    currentPrice: { type: Number, required: true }, // Store in cents
+    currentPrice: { type: Number, required: true }, // Store in paise
     startingPrice: { type: Number, required: true },
     endTime: { type: Date, required: true },
     highestBidder: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
