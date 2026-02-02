@@ -5,7 +5,18 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import auctionRoutes from './routes/auctionRoutes.js';
 import { placeBid } from './services/auctionServices.js';
+import connectDB from './config/db.js';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
 
+// Connect to Database
+connectDB();
+
+app.use(helmet());
+app.use(mongoSanitize());
+
+// Load environment variables
 dotenv.config();
 
 const app = express();
@@ -21,13 +32,13 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
-
+    
     // EVENT: User places a bid
     socket.on('BID_PLACED', (payload) => {
         const { itemId, amount } = payload;
-
+        
         const result = placeBid(itemId, amount, socket.id);
-
+        
         if (result.success) {
             // SUCCESS: New price to EVERYONE
             io.emit('UPDATE_BID', result.item);
@@ -36,7 +47,7 @@ io.on('connection', (socket) => {
             socket.emit('BID_ERROR', { message: result.error });
         }
     });
-
+    
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
     });
@@ -45,6 +56,14 @@ io.on('connection', (socket) => {
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api', limiter);
 
 // Auction Routes
 app.use('/items', auctionRoutes);
