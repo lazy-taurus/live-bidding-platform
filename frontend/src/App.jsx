@@ -1,19 +1,6 @@
 import { useState, useEffect } from 'react';
 import Login from './pages/Login';
-
-// Placeholder for Dashboard
-const DashboardPlaceholder = ({ user, onLogout }) => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-    <h1 className="text-4xl font-bold text-gray-800 mb-4">Hello, {user.username} 👋</h1>
-    <p className="text-gray-500 mb-8">The Auction Dashboard is coming next...</p>
-    <button 
-        onClick={onLogout} 
-        className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-    >
-        Logout
-    </button>
-  </div>
-);
+import Dashboard from './components/Dashboard';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -40,7 +27,7 @@ function App() {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-  return <DashboardPlaceholder user={user} onLogout={handleLogout} />;
+  return <Dashboard user={user} onLogout={handleLogout} />;
 }
 
 export default App;

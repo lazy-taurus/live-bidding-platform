@@ -14,13 +14,11 @@ dotenv.config();
 // 2. Import Local Files (after dotenv)
 import auctionRoutes from './routes/auctionRoutes.js';
 import authRoutes from './routes/authRoutes.js';
-import { placeBid } from './services/auctionServices.js'; // Fixed: Singular 'Service'
+import { placeBid } from './services/auctionServices.js'; 
 import connectDB from './config/db.js';
 
 // 3. Connect to Database
 connectDB();
-
-console.log("🔍 MONGO_URI is:", process.env.MONGO_URI);
 
 const app = express();
 const server = http.createServer(app);
@@ -62,19 +60,35 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
-    console.log('✅ User connected to Socket:', socket.user.username);
+    // FIX: Handle both "id" (standard) and "_id" (mongo) to be safe
+    const userId = socket.user.id || socket.user._id;
+    // console.log('User connected to Socket:', userId);
     
+    // FIX: Join a private room so we can message this specific user later
+    socket.join(userId);
+
     socket.on('BID_PLACED', async (payload) => {
         const { itemId, amount } = payload;
-        // Pass socket.user.id (from the token)
-        const result = await placeBid(itemId, amount, socket.user.id);
+        
+        // Use the safe userId variable
+        const result = await placeBid(itemId, amount, userId);
 
         if (result.success) {
-            // Broadcast update to EVERYONE
+            // 1. Update to EVERYONE
             io.emit('UPDATE_BID', result.item);
+
+            // 2. Notify the VICTIM
+            if (result.previousBidderId && result.previousBidderId !== userId) {
+                //console.log(`Sending OUTBID alert to: ${result.previousBidderId}`);
+                
+                io.to(result.previousBidderId).emit('AUCTION_OUTBID', { 
+                    itemId: result.item._id,
+                    newItem: result.item
+                });
+            }
         } else {
             // Send error only to the SENDER
-            socket.emit('BID_ERROR', { message: result.message });
+            socket.emit('BID_ERROR', { itemId, message: result.message || result.error });
         }
     });
     
@@ -94,5 +108,5 @@ app.get('/health', (req, res) => {
 // 7. Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
