@@ -5,6 +5,20 @@ import { placeBid as placeBidService } from '../services/auctionServices.js';
 export const getItems = async (req, res) => {
   try {
     const items = await AuctionItem.find().populate('highestBidder', 'username');
+    
+    // Sort: active items first (by endTime ascending), then ended items
+    const now = new Date();
+    items.sort((a, b) => {
+      const aIsEnded = a.isClosed || a.endTime < now;
+      const bIsEnded = b.isClosed || b.endTime < now;
+      
+      if (aIsEnded !== bIsEnded) {
+        return aIsEnded ? 1 : -1;
+      }
+      
+      return a.endTime - b.endTime;
+    });
+    
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
