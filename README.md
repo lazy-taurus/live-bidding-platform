@@ -41,7 +41,7 @@ The entire application (Frontend, Backend, and Database) is containerized. You c
 
 1. **Clone the repository:**
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/lazy-taurus/live-bidding-platform.git
 cd live-bidding-platform
 
 ```
