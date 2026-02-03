@@ -6,11 +6,7 @@ This repository is a submission for the **Levich Solutions Level 1 Challenge**. 
 
 ---
 
-## 📸 At a Glance
-
-*(Optional: Add screenshots here of your Dashboard and the "Outbid" Red Flash)*
-
-### 🚀 Key Highlights
+## 🚀 Key Highlights
 
 * **Race Condition Proof:** Handles simultaneous bids atomically—only the first valid bid wins.
 * **Real-Time Sync:** Users see price updates instantly (via WebSockets) without refreshing.
