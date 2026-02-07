@@ -4,7 +4,15 @@ import { placeBid as placeBidService } from '../services/auctionServices.js';
 // 1. Get All Items
 export const getItems = async (req, res) => {
   try {
-    const items = await AuctionItem.find().populate('highestBidder', 'username');
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    // Fetch items with pagination
+    const items = await AuctionItem.find()
+      .populate('highestBidder', 'username')
+      .skip(skip)
+      .limit(limit);
     
     // Sort: active items first
     const now = new Date();
@@ -67,7 +75,8 @@ export const createItem = async (req, res) => {
             endTime,
             imageUrl,
             highestBidder: null,
-            bidHistory: []
+            bidHistory: [],
+            seller: req.user._id // Save the seller
         });
 
         await newItem.save();

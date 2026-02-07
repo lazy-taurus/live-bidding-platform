@@ -34,8 +34,8 @@ function App() {
         />
 
         <Route 
-          path="/admin" 
-          element={<AdminPanel />} 
+          path="/create" 
+          element={user ? <AdminPanel user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
         />
 
         <Route 

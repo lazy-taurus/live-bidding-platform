@@ -22,10 +22,11 @@ connectDB();
 
 const app = express();
 const server = http.createServer(app);
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 // 4. MIDDLEWARE
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: CLIENT_URL,
     credentials: true
 }));
 app.use(helmet());         
@@ -43,7 +44,7 @@ app.use('/api', limiter);
 // 5. Socket.io Setup
 const io = new Server(server, {
     cors: {
-        origin: "*", // In production, change to your frontend URL
+        origin: CLIENT_URL,
         methods: ["GET", "POST"]
     }
 });

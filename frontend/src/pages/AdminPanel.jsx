@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-export default function AdminPanel() {
+export default function AdminPanel({ user, onLogout }) {
     const [items, setItems] = useState([]);
     const [formData, setFormData] = useState({
         title: '',
@@ -55,7 +55,17 @@ export default function AdminPanel() {
 
     return (
         <div className="max-w-4xl mx-auto p-10">
-            <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+            {/* ... Header ... */}
+            <nav className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">L</div>
+                    <span className="text-xl font-bold text-gray-800 tracking-tight">Let's Bid</span>
+                </div>
+                <div className="flex items-center gap-6">
+                    <span className="text-sm text-gray-500 hidden md:block">Welcome, <span className="text-gray-900 font-medium">{user.username}</span></span>
+                    <button onClick={onLogout} className="text-sm font-medium text-red-500 hover:text-red-600">Logout</button>
+                </div>
+            </nav>
 
             {/* CREATE FORM */}
             <div className="bg-white p-6 rounded-xl shadow-md mb-10 border border-gray-200">

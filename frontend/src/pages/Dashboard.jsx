@@ -22,6 +22,11 @@ export default function Dashboard({ user, onLogout }) {
         socket.auth.token = localStorage.getItem('token');
         socket.connect();
 
+        socket.on('connect', () => {
+            console.log("Socket connected/reconnected. Syncing...");
+            fetchData();
+        });
+
         socket.on('UPDATE_BID', (updatedItem) => {
             setItems(prev => prev.map(item => item._id === updatedItem._id ? updatedItem : item));
         });
@@ -60,7 +65,7 @@ export default function Dashboard({ user, onLogout }) {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            {/* ... Header Code Remains Same ... */}
+            {/* ... Header ... */}
             <nav className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">L</div>
