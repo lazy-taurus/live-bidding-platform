@@ -4,30 +4,63 @@ import { placeBid as placeBidService } from '../services/auctionServices.js';
 // 1. Get All Items
 export const getItems = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit) || 20);
     const skip = (page - 1) * limit;
     const now = new Date();
 
-    // Sort at the Database level. Active auctions first, then by end time.
-    const items = await AuctionItem.aggregate([
-      {
-        $addFields: {
-          activeOrder: { 
-            $cond: { 
-              if: { $and: [ { $gt: ["$endTime", now] }, { $eq: ["$isClosed", false] } ] }, 
-              then: 1, 
-              else: 2 
-            }
-          }
-        }
-      },
-      { $sort: { activeOrder: 1, endTime: 1 } }, 
-      { $skip: skip },
-      { $limit: limit },
-    ]);
+    // Active
+    const activeFilter = { 
+        isClosed: false, 
+        endTime: { $gt: now } 
+    };
+    
+    // Closed
+    const closedFilter = { 
+        $or: [
+            { isClosed: true },
+            { endTime: { $lte: now } }
+        ]
+    };
 
-    await AuctionItem.populate(items, { path: 'highestBidder', select: 'username' });
+    const totalActiveCount = await AuctionItem.countDocuments(activeFilter);
+
+    let items = [];
+
+    if (skip < totalActiveCount) {
+        const activeItems = await AuctionItem.find(activeFilter)
+            .sort({ endTime: 1 }) 
+            .skip(skip)
+            .limit(limit)
+            .populate('highestBidder', 'username')
+            .lean();
+
+        items = [...activeItems];
+
+        if (items.length < limit) {
+            const remainingLimit = limit - items.length;
+            
+            const closedItems = await AuctionItem.find(closedFilter)
+                .sort({ endTime: 1 }) 
+                .skip(0) 
+                .limit(remainingLimit)
+                .populate('highestBidder', 'username')
+                .lean();
+            
+            items = [...items, ...closedItems];
+        }
+    } 
+    
+    else {
+        const closedSkip = skip - totalActiveCount;
+
+        items = await AuctionItem.find(closedFilter)
+            .sort({ endTime: 1 }) 
+            .skip(closedSkip)
+            .limit(limit)
+            .populate('highestBidder', 'username')
+            .lean();
+    }
 
     res.json(items);
   } catch (error) {
@@ -59,7 +92,7 @@ export const placeBid = async (req, res) => {
     const result = await placeBidService(id, amount, req.user._id);
 
     if (!result.success) {
-      return res.status(400).json({ message: result.message });
+      return res.status(400).json({ message: result.message || result.error });
     }
 
     res.json(result.item);
@@ -73,6 +106,14 @@ export const createItem = async (req, res) => {
     try {
         const { title, description, startingPrice, endTime, imageUrl } = req.body;
         
+        // Validation
+        if (!title || !startingPrice || !endTime) {
+            return res.status(400).json({ message: "Please provide title, startingPrice, and endTime" });
+        }
+        if (new Date(endTime) <= new Date()) {
+            return res.status(400).json({ message: "End time must be in the future" });
+        }
+
         const newItem = new AuctionItem({
             title,
             description,
@@ -95,6 +136,16 @@ export const createItem = async (req, res) => {
 // 5. Delete Item
 export const deleteItem = async (req, res) => {
     try {
+        const item = await AuctionItem.findById(req.params.id);
+        
+        if (!item) {
+            return res.status(404).json({ message: "Item not found" });
+        }
+
+        if (item.seller.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "Not authorized to delete this item" });
+        }
+
         await AuctionItem.findByIdAndDelete(req.params.id);
         res.json({ message: 'Item deleted' });
     } catch (error) {

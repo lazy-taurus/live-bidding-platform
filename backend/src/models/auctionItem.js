@@ -21,4 +21,6 @@ const auctionItemSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+auctionItemSchema.index({ isClosed: 1, endTime: 1 });
+
 export default mongoose.model('AuctionItem', auctionItemSchema);
