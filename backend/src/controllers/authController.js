@@ -2,7 +2,8 @@ import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET || 'secret_key', { expiresIn: '30d' });
+    if (!process.env.JWT_SECRET) throw new Error("FATAL: JWT_SECRET not defined");
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
 // POST /api/auth/register

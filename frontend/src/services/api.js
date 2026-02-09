@@ -41,5 +41,10 @@ export const getItems = async () => {
     const res = await fetch(`${API_URL}/items`, {
         headers: getAuthHeaders(),
     });
+    if (res.status === 401) {
+        localStorage.clear();
+        window.location.href = '/login';
+        return [];
+    }
     return await res.json();
 };

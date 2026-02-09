@@ -2,7 +2,7 @@ import AuctionItem from '../models/auctionItem.js';
 
 export const placeBid = async (itemId, amount, userId) => {
     // 1. Basic Validation
-    if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
+    if (!amount || typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
         return { success: false, error: 'Bid must be a valid positive number' };
     }
 
@@ -11,6 +11,7 @@ export const placeBid = async (itemId, amount, userId) => {
         { 
             _id: itemId, 
             endTime: { $gt: new Date() }, // not expired
+            isClosed: false, // not closed
             currentPrice: { $lt: amount }, // new bid > current price
             highestBidder: { $ne: userId },
             seller: { $ne: userId }
@@ -24,7 +25,7 @@ export const placeBid = async (itemId, amount, userId) => {
                 bidHistory: { user: userId, amount: amount } 
             }
         },
-        { new: false } // <--- KEY FIX: Return the OLD document
+        { new: false } // Return the OLD document
     );
 
     if (!originalItem) {

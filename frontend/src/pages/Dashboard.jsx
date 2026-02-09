@@ -13,19 +13,28 @@ const socket = io(API_URL, {
 export default function Dashboard({ user, onLogout }) {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isConnected, setIsConnected] = useState(socket.connected);
     
     const [flashMessages, setFlashMessages] = useState({});
 
     useEffect(() => {
-        getItems().then(data => { setItems(data); setLoading(false); }).catch(error => console.error('Failed to fetch items:', error));
+        const fetchData = () => {
+            getItems()
+                .then(data => { setItems(data); setLoading(false); })
+                .catch(error => console.error('Failed to fetch items:', error));
+        };
+        fetchData();
         
         socket.auth.token = localStorage.getItem('token');
         socket.connect();
 
         socket.on('connect', () => {
             console.log("Socket connected/reconnected. Syncing...");
+            setIsConnected(true);
             fetchData();
         });
+        
+        socket.on('disconnect', () => setIsConnected(false));
 
         socket.on('UPDATE_BID', (updatedItem) => {
             setItems(prev => prev.map(item => item._id === updatedItem._id ? updatedItem : item));
@@ -39,10 +48,15 @@ export default function Dashboard({ user, onLogout }) {
             triggerFlash(data.itemId || 'global', 'error', data.message);
         });
 
+        socket.on('AUCTION_WON', (data) => {
+            triggerFlash(data.item._id, 'success', 'YOU WON!');
+        });
+
         return () => {
             socket.off('UPDATE_BID');
             socket.off('AUCTION_OUTBID');
             socket.off('BID_ERROR');
+            socket.off('AUCTION_WON');
             socket.disconnect();
         };
     }, []);
@@ -70,6 +84,7 @@ export default function Dashboard({ user, onLogout }) {
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">L</div>
                     <span className="text-xl font-bold text-gray-800 tracking-tight">Let's Bid</span>
+                    <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} title={isConnected ? "Live" : "Disconnected"} />
                 </div>
                 <div className="flex items-center gap-6">
                     <span className="text-sm text-gray-500 hidden md:block">Welcome, <span className="text-gray-900 font-medium">{user.username}</span></span>

@@ -16,6 +16,7 @@ import auctionRoutes from './routes/auctionRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import { placeBid } from './services/auctionServices.js'; 
 import connectDB from './config/db.js';
+import { startAuctionScheduler } from './services/scheduler.js';
 
 // 3. Connect to Database
 connectDB();
@@ -62,6 +63,8 @@ io.use((socket, next) => {
         next(new Error("Authentication error: Invalid token"));
     }
 });
+
+startAuctionScheduler(io);
 
 io.on('connection', (socket) => {
     // FIX: Handle both "id" (standard) and "_id" (mongo) to be safe

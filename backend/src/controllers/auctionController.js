@@ -7,28 +7,31 @@ export const getItems = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
-
-    // Fetch items with pagination
-    const items = await AuctionItem.find()
-      .populate('highestBidder', 'username')
-      .skip(skip)
-      .limit(limit);
-    
-    // Sort: active items first
     const now = new Date();
-    items.sort((a, b) => {
-      const aIsEnded = a.isClosed || a.endTime < now;
-      const bIsEnded = b.isClosed || b.endTime < now;
-      
-      if (aIsEnded !== bIsEnded) {
-        return aIsEnded ? 1 : -1;
-      }
-      
-      return a.endTime - b.endTime;
-    });
-    
+
+    // Sort at the Database level. Active auctions first, then by end time.
+    const items = await AuctionItem.aggregate([
+      {
+        $addFields: {
+          activeOrder: { 
+            $cond: { 
+              if: { $and: [ { $gt: ["$endTime", now] }, { $eq: ["$isClosed", false] } ] }, 
+              then: 1, 
+              else: 2 
+            }
+          }
+        }
+      },
+      { $sort: { activeOrder: 1, endTime: 1 } }, 
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+
+    await AuctionItem.populate(items, { path: 'highestBidder', select: 'username' });
+
     res.json(items);
   } catch (error) {
+    console.error("GetItems Error:", error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -49,6 +52,9 @@ export const placeBid = async (req, res) => {
   try {
     const { id } = req.params;
     const { amount } = req.body;
+    if (!amount || typeof amount !== 'number') {
+      return res.status(400).json({ message: "Invalid bid amount" });
+    }
     
     const result = await placeBidService(id, amount, req.user._id);
 
