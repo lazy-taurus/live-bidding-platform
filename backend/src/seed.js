@@ -10,45 +10,87 @@ connectDB();
 
 const seedData = async () => {
     try {
-        // Clear existing data
+        // 1. Clear existing data
         await AuctionItem.deleteMany({});
-        console.log('🧹 Old auction items cleared...');
+        await User.deleteMany({});
+        console.log('Old data cleared...');
 
-        // Define the items
+        // 2. Create Users
+        const user1 = await User.create({
+            username: 'Alice_Seller',
+            email: 'alice@example.com',
+            password: 'password123'
+        });
+
+        const user2 = await User.create({
+            username: 'Bob_Seller',
+            email: 'bob@example.com',
+            password: 'password123'
+        });
+
+        console.log(`Users created: ${user1.username} & ${user2.username}`);
+
+        // 3. Define the items
         const items = [
-            {
-                title: 'Sony WH-1000XM5 Headphones',
-                description: 'Industry-leading noise canceling headphones with 30-hour battery life.',
-                currentPrice: 25000, // ₹250.00
-                startingPrice: 25000,
-                endTime: new Date(Date.now() + 1000 * 60 * 60 * 24), // Ends in 24 hours
-                isClosed: false
-            },
-            {
-                title: 'MacBook Pro M2 (14-inch)',
-                description: 'Apple M2 Pro chip, 16GB RAM, 512GB SSD. Space Gray.',
-                currentPrice: 120000, // ₹1200.00
-                startingPrice: 120000,
-                endTime: new Date(Date.now() + 1000 * 60 * 30), // Ends in 30 minutes
-                isClosed: false
-            },
+            // Item 1: Ends in 5 minutes
             {
                 title: 'Vintage 1990s Mechanical Keyboard',
                 description: 'Rare find. Cherry MX Blue switches. Mint condition.',
-                currentPrice: 5000, // ₹50.00
+                currentPrice: 5000, 
                 startingPrice: 5000,
-                endTime: new Date(Date.now() + 1000 * 60 * 5), // Ends in 5 minutes (Good for testing "Out of Time")
+                endTime: new Date(Date.now() + 1000 * 60 * 5), 
+                seller: user1._id,
                 isClosed: false
+            },
+            // Item 2: Ends in 30 minutes
+            {
+                title: 'MacBook Pro M2 (14-inch)',
+                description: 'Apple M2 Pro chip, 16GB RAM, 512GB SSD. Space Gray.',
+                currentPrice: 120000, 
+                startingPrice: 120000,
+                endTime: new Date(Date.now() + 1000 * 60 * 30), 
+                seller: user2._id,
+                isClosed: false
+            },
+            // Item 3: Ends in 24 hours
+            {
+                title: 'Sony WH-1000XM5 Headphones',
+                description: 'Industry-leading noise canceling headphones with 30-hour battery life.',
+                currentPrice: 25000, 
+                startingPrice: 25000,
+                endTime: new Date(Date.now() + 1000 * 60 * 60 * 24), 
+                seller: user1._id,
+                isClosed: false
+            },
+            // Item 4: Ends in 48 hours
+            {
+                title: 'PlayStation 5 Console',
+                description: 'Next-gen gaming. 4K 120Hz support. Includes 2 controllers.',
+                currentPrice: 45000,
+                startingPrice: 45000,
+                endTime: new Date(Date.now() + 1000 * 60 * 60 * 48),
+                seller: user2._id,
+                isClosed: false
+            },
+            // Item 5: Ended 1 hour ago
+            {
+                title: 'Rolex Submariner Date',
+                description: 'Classic diver watch. Stainless steel. 41mm. (Sold)',
+                currentPrice: 850000,
+                startingPrice: 800000,
+                endTime: new Date(Date.now() - 1000 * 60 * 60), 
+                seller: user1._id,
+                isClosed: true
             }
         ];
 
-        // Insert into DB
+        // 4. Insert into DB
         await AuctionItem.insertMany(items);
-        console.log('✅ Database seeded successfully!');
+        console.log('5 Auction Items created successfully!');
 
         process.exit();
     } catch (error) {
-        console.error(`❌ Error seeding database: ${error.message}`);
+        console.error(`Error seeding database: ${error.message}`);
         process.exit(1);
     }
 };
