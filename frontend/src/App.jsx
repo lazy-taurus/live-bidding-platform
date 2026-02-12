@@ -5,15 +5,10 @@ import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel'; // ✅ Import Admin Panel
 
 function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Check if user is already logged in
+  const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
   const handleLoginSuccess = () => {
       setUser(JSON.parse(localStorage.getItem('user')));
