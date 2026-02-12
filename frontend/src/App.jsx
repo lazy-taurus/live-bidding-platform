@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import AdminPanel from './pages/AdminPanel'; // ✅ Import Admin Panel
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -37,6 +37,8 @@ function App() {
           path="/" 
           element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
         />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
