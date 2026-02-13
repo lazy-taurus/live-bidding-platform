@@ -90,7 +90,7 @@ export default function Dashboard({ user, onLogout }) {
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">L</div>
                     <span className="text-xl font-bold text-gray-800 tracking-tight">Let's Bid</span>
-                    <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} title={isConnected ? "Live" : "Disconnected"} />
+                    {/*<div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} title={isConnected ? "Live" : "Disconnected"} />*/}
                 </div>
                 <div className="flex items-center gap-6">
                     <span className="text-sm text-gray-500 hidden md:block">Welcome, <span className="text-gray-900 font-medium">{user.username}</span></span>
