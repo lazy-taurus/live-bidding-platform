@@ -3,12 +3,15 @@ import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { placeBid } from './auctionServices.js';
 
-// Setup Redis Connection
-const connection = new IORedis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379,
-    maxRetriesPerRequest: null // BullMQ requires this
-});
+const redisConfig = { maxRetriesPerRequest: null };
+
+const connection = process.env.REDIS_URL 
+    ? new IORedis(process.env.REDIS_URL, redisConfig)
+    : new IORedis({
+        host: process.env.REDIS_HOST || 'localhost',
+        port: process.env.REDIS_PORT || 6379,
+        ...redisConfig
+    });
 
 // Initialize the Queue (Producer)
 export const bidQueue = new Queue('bids', { connection });
