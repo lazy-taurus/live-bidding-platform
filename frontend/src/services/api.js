@@ -37,8 +37,8 @@ export const register = async (username, email, password) => {
     return data;
 };
 
-export const getItems = async () => {
-    const res = await fetch(`${API_URL}/items`, {
+export const getItems = async (page = 1, limit = 12) => {
+    const res = await fetch(`${API_URL}/items?page=${page}&limit=${limit}`, {
         headers: getAuthHeaders(),
     });
     if (res.status === 401) {

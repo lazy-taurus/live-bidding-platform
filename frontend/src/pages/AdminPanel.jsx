@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function AdminPanel({ user, onLogout }) {
+    const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [formData, setFormData] = useState({
         title: '',
@@ -54,7 +56,7 @@ export default function AdminPanel({ user, onLogout }) {
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-10">
+        <div className="min-h-screen bg-slate-50">
             {/* ... Header ... */}
             <nav className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
                 <div className="flex items-center gap-2">
@@ -63,10 +65,16 @@ export default function AdminPanel({ user, onLogout }) {
                 </div>
                 <div className="flex items-center gap-6">
                     <span className="text-sm text-gray-500 hidden md:block">Welcome, <span className="text-gray-900 font-medium">{user.username}</span></span>
+                    <button 
+                        onClick={() => navigate('/')} 
+                        className="text-sm font-medium text-gray-500 hover:text-blue-600"
+                    >
+                        Back to Dashboard
+                    </button>
                     <button onClick={onLogout} className="text-sm font-medium text-red-500 hover:text-red-600">Logout</button>
                 </div>
             </nav>
-
+        <div className="max-w-4xl mx-auto p-10">
             {/* CREATE FORM */}
             <div className="bg-white p-6 rounded-xl shadow-md mb-10 border border-gray-200">
                 <h2 className="text-xl font-bold mb-4">Add New Auction Item</h2>
@@ -113,5 +121,6 @@ export default function AdminPanel({ user, onLogout }) {
                 ))}
             </div>
         </div>
+    </div>
     );
 }

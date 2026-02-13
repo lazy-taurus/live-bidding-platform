@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { getItems } from '../services/api';
 import ItemCard from '../components/ItemCard';
@@ -11,20 +12,25 @@ const socket = io(API_URL, {
 });
 
 export default function Dashboard({ user, onLogout }) {
+    const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isConnected, setIsConnected] = useState(socket.connected);
-    
+    const [page, setPage] = useState(1); // Page state
     const [flashMessages, setFlashMessages] = useState({});
 
     useEffect(() => {
         const fetchData = () => {
-            getItems()
+            setLoading(true);
+            getItems(page) // Pass page number
                 .then(data => { setItems(data); setLoading(false); })
                 .catch(error => console.error('Failed to fetch items:', error));
         };
         fetchData();
-        
+    }, [page]);
+
+    // Socket connection logic
+    useEffect(() => {
         socket.auth.token = localStorage.getItem('token');
         socket.connect();
 
@@ -59,7 +65,7 @@ export default function Dashboard({ user, onLogout }) {
             socket.off('AUCTION_WON');
             socket.disconnect();
         };
-    }, []);
+    }, [page]);
 
     const triggerFlash = (itemId, type, msg) => {
         setFlashMessages(prev => ({ ...prev, [itemId]: { type, msg } }));
@@ -88,6 +94,15 @@ export default function Dashboard({ user, onLogout }) {
                 </div>
                 <div className="flex items-center gap-6">
                     <span className="text-sm text-gray-500 hidden md:block">Welcome, <span className="text-gray-900 font-medium">{user.username}</span></span>
+                    
+                    {/* Create Auction Button */}
+                    <button 
+                        onClick={() => navigate('/create')}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                    >
+                        Create Auction
+                    </button>
+
                     <button onClick={onLogout} className="text-sm font-medium text-red-500 hover:text-red-600">Logout</button>
                 </div>
             </nav>
@@ -112,6 +127,25 @@ export default function Dashboard({ user, onLogout }) {
                         ))}
                     </div>
                 )}
+
+                {/* Pagination Controls */}
+                <div className="mt-12 flex justify-center gap-4">
+                    <button 
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        className={`px-4 py-2 rounded ${page === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                    >
+                        Previous
+                    </button>
+                    <span className="px-4 py-2 text-gray-700 font-medium">Page {page}</span>
+                    <button 
+                        disabled={items.length === 0} // Simple check for end of list
+                        onClick={() => setPage(p => p + 1)}
+                        className={`px-4 py-2 rounded ${items.length === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                    >
+                        Next
+                    </button>
+                </div>
             </main>
         </div>
     );
