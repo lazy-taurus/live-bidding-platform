@@ -1,21 +1,33 @@
 services:
-  # MongoDB Database
-  mongodb:
-    image: mongo:7.0
-    container_name: live-bidding-mongodb
+  # -----------------------------------------------------------------------------------------------
+  # OPTIONAL: Local MongoDB (Commented out for Atlas Cloud Usage)
+  # To use local DB: Uncomment this block, the 'depends_on' in server, and the 'volumes' at bottom.
+  # -----------------------------------------------------------------------------------------------
+  # mongodb:
+  #   image: mongo:7.0
+  #   container_name: live-bidding-mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     MONGO_INITDB_DATABASE: live-bidding
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   networks:
+  #     - auction-network
+  #   healthcheck:
+  #     test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: live-bidding-redis
     ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: live-bidding
-    volumes:
-      - mongodb_data:/data/db
+      - "6379:6379"
     networks:
       - auction-network
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    restart: always
 
   # The API & Socket Server
   server:
@@ -29,9 +41,10 @@ services:
       - MONGO_URI=${MONGO_URI:-mongodb://mongodb:27017/live-bidding}
       - JWT_SECRET=${JWT_SECRET:-change_me_in_production}
       - CLIENT_URL=${CLIENT_URL:-http://localhost:3000}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
-      mongodb:
-        condition: service_healthy
+      - redis
     networks:
       - auction-network
     restart: unless-stopped
@@ -51,9 +64,9 @@ services:
       - auction-network
     restart: unless-stopped
 
-volumes:
-  mongodb_data:
-    driver: local
+# volumes:
+#   mongodb_data:
+#     driver: local
 
 networks:
   auction-network:

@@ -2,18 +2,13 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import AdminPanel from './pages/AdminPanel'; // ✅ Import Admin Panel
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Check if user is already logged in
+  const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
   const handleLoginSuccess = () => {
       setUser(JSON.parse(localStorage.getItem('user')));
@@ -34,14 +29,16 @@ function App() {
         />
 
         <Route 
-          path="/admin" 
-          element={<AdminPanel />} 
+          path="/create" 
+          element={user ? <AdminPanel user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
         />
 
         <Route 
           path="/" 
           element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
         />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

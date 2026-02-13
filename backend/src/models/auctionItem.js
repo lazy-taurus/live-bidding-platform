@@ -7,6 +7,8 @@ const auctionItemSchema = new mongoose.Schema({
     currentPrice: { type: Number, required: true }, // Store in paise
     startingPrice: { type: Number, required: true },
     endTime: { type: Date, required: true },
+    // Seller added
+    seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     highestBidder: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     isClosed: { type: Boolean, default: false },
     
@@ -18,5 +20,7 @@ const auctionItemSchema = new mongoose.Schema({
     }],
 
 }, { timestamps: true });
+
+auctionItemSchema.index({ isClosed: 1, endTime: 1 });
 
 export default mongoose.model('AuctionItem', auctionItemSchema);
