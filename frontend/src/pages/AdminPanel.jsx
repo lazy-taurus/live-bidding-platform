@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getItems, createItem, deleteItem } from '../services/api';
 
 export default function AdminPanel({ user, onLogout }) {
     const navigate = useNavigate();
@@ -16,13 +14,14 @@ export default function AdminPanel({ user, onLogout }) {
         imageUrl: ''
     });
 
-    const token = localStorage.getItem('token');
-
-    // Fetch items
+    // Fetch items using the service
     const fetchItems = async () => {
-        // Added page and limit parameters
-        const res = await axios.get(`${API_URL}/items?page=${page}&limit=10`);
-        setItems(res.data);
+        try {
+            const data = await getItems(page, 10);
+            setItems(data);
+        } catch (error) {
+            console.error("Failed to fetch items", error);
+        }
     };
 
     useEffect(() => { fetchItems(); }, [page]);
@@ -31,13 +30,24 @@ export default function AdminPanel({ user, onLogout }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(`${API_URL}/items`, {
+            // Use the createItem service
+            await createItem({
                 ...formData,
                 startingPrice: parseFloat(formData.startingPrice) * 100 
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
             });
+            
             alert('Item Added!');
+            
+            // Reset form
+            setFormData({
+                title: '',
+                description: '',
+                startingPrice: '',
+                endTime: '',
+                imageUrl: ''
+            });
+            
+            // Refresh list
             fetchItems();
         } catch (err) {
             alert('Error adding item');
@@ -48,9 +58,7 @@ export default function AdminPanel({ user, onLogout }) {
     const handleDelete = async (id) => {
         if(!confirm('Delete this item?')) return;
         try {
-            await axios.delete(`${API_URL}/items/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await deleteItem(id);
             fetchItems();
         } catch (err) {
             alert('Error deleting item');
@@ -83,20 +91,25 @@ export default function AdminPanel({ user, onLogout }) {
                     <h2 className="text-xl font-bold mb-4">Add New Auction Item</h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <input className="w-full p-2 border rounded" placeholder="Item Title" required 
+                            value={formData.title}
                             onChange={e => setFormData({...formData, title: e.target.value})} />
                         
                         <textarea className="w-full p-2 border rounded" placeholder="Description" required 
+                            value={formData.description}
                             onChange={e => setFormData({...formData, description: e.target.value})} />
                         
                         <div className="grid grid-cols-2 gap-4">
                             <input className="p-2 border rounded" type="number" placeholder="Start Price ($)" required 
+                                value={formData.startingPrice}
                                 onChange={e => setFormData({...formData, startingPrice: e.target.value})} />
                             
                             <input className="p-2 border rounded" type="datetime-local" required 
+                                value={formData.endTime}
                                 onChange={e => setFormData({...formData, endTime: e.target.value})} />
                         </div>
 
                         <input className="w-full p-2 border rounded" placeholder="Image URL (http://...)" required 
+                            value={formData.imageUrl}
                             onChange={e => setFormData({...formData, imageUrl: e.target.value})} />
 
                         <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">

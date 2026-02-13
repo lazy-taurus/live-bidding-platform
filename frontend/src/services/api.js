@@ -48,3 +48,22 @@ export const getItems = async (page = 1, limit = 12) => {
     }
     return await res.json();
 };
+
+export const createItem = async (itemData) => {
+    const res = await fetch(`${API_URL}/items`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(itemData),
+    });
+    if (!res.ok) throw new Error('Failed to create item');
+    return await res.json();
+};
+
+export const deleteItem = async (id) => {
+    const res = await fetch(`${API_URL}/items/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to delete item');
+    return await res.json();
+};
