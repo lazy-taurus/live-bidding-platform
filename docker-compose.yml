@@ -20,6 +20,15 @@ services:
   #     timeout: 5s
   #     retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: live-bidding-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - auction-network
+    restart: always
+
   # The API & Socket Server
   server:
     build: ./backend
@@ -29,13 +38,13 @@ services:
     environment:
       - PORT=${PORT:-5000}
       - NODE_ENV=${NODE_ENV:-development}
-      # Uses .env for Atlas. Fallback is local if you uncomment the service above.
       - MONGO_URI=${MONGO_URI:-mongodb://mongodb:27017/live-bidding}
       - JWT_SECRET=${JWT_SECRET:-change_me_in_production}
       - CLIENT_URL=${CLIENT_URL:-http://localhost:3000}
-    # depends_on:
-    #   mongodb:
-    #     condition: service_healthy
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
     networks:
       - auction-network
     restart: unless-stopped

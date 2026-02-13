@@ -17,6 +17,7 @@ import authRoutes from './routes/authRoutes.js';
 import connectDB from './config/db.js';
 import { startAuctionScheduler } from './services/scheduler.js';
 import socketHandler from './socketHandler.js';
+import { startBidWorker } from './services/bidQueue.js';
 
 // 3. Connect to Database
 connectDB();
@@ -50,8 +51,9 @@ const io = new Server(server, {
     }
 });
 
-    socketHandler(io);
-    startAuctionScheduler(io);
+socketHandler(io);
+startAuctionScheduler(io);
+startBidWorker(io);
 
 // 6. Routes
 app.use('/items', auctionRoutes);
